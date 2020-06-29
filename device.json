@@ -1,0 +1,110 @@
+{
+  "host": "10.1.253.2",
+  "username": "enable_1",
+  "password": "F!$Hf4c3",
+  "interfaces": [
+    {
+      "intname": "Management0/0",
+      "objectid": "Management0_API_SLASH_0",
+      "attributes": {
+        "kind": "object#MgmtInterface",
+        "interfaceDesc": "My management interface",
+        "name": "Management",
+        "securityLevel": 100,
+        "ipAddress": {
+          "ip": {
+            "kind": "IPv4Address",
+            "value": "192.168.1.1"
+          },
+          "kind": "StaticIP",
+          "netMask": {
+            "kind": "IPv4NetMask",
+            "value": "255.255.255.0"
+          }
+        },
+        "shutdown": "false"
+      }
+    },
+    {
+      "intname": "GigabitEthernet0/5",
+      "objectid": "GigabitEthernet0_API_SLASH_5",
+      "attributes": {
+        "kind": "object#GigabitInterface",
+        "interfaceDesc": "Extranet",
+        "name": "extranet",
+        "securityLevel": 0,
+        "ipAddress": {
+          "ip": {
+            "kind": "IPv4Address",
+            "value": "172.16.1.1"
+          },
+          "kind": "StaticIP",
+          "netMask": {
+            "kind": "IPv4NetMask",
+            "value": "255.255.255.0"
+          }
+        },
+        "shutdown": "false"
+      }
+    }
+  ],
+  "keys": {
+    "usage": "General Purpose",
+    "kind": "object#Keypair",
+    "type": "rsa",
+    "name": "mykeypair",
+    "size": 2048
+  },
+  "commands": { 
+    "commands": [
+      "show version",
+      "show interface ip brief",
+      "show nameif"
+    ]
+  },
+  "identity_cert": {
+    "enrollParameters": {
+      "includeSerialNumber": false,
+      "subjectDN": {
+        "c": ["US"],
+        "cn": [
+          "asa.dcloud.cisco.com"
+        ],
+        "ea": ["support@dcloud.cisco.com"],
+        "l": ["San Jose"],
+        "o": ["Cisco Systems"],
+        "st": ["CA"],
+        "ou": ["dCloud"]
+      },
+      "ipAddress": "198.18.133.254",
+      "fqdn": "asa.dcloud.cisco.com",
+      "email": "support@dcloud.cisco.com"
+    },
+    "kind": "object#IdentityCertificate",
+    "name": "my_trustpoint",
+    "enableCACheck": true,
+    "enableProxyLDCIssuer": false,
+    "keyPair": "mykeypair",
+    "selfSign": true
+  },
+  "static_routes": [
+    {      
+      "tunneled": false,
+      "kind": "object#IPv4Route",
+      "distanceMetric": 250,
+      "tracked": false,
+      "interface": {
+        "kind": "objectRef#Interface",
+        "name": "outside"
+      },
+      "gateway": {
+        "kind": "IPv4Address",
+        "value": "198.18.128.1"
+      },
+      "network": {
+        "kind": "AnyIPAddress",
+        "value": "any4"
+      }
+    }
+  ] 
+}
