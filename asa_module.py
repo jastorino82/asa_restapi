@@ -30,6 +30,7 @@ def get_response(url, method, username, password, payload=''):
 
     if r.status_code not in range(200, 205):
         print(f"Request failed. Terminating! \t {r}")
+        print(json.dumps(json.loads(r.text), indent=4))
         raise SystemExit()
 
     else:
@@ -70,10 +71,40 @@ def get_interfaces():
         print(f"Shutdown Status: {interface['shutdown']}")
         print("\n")
 
+def enable_dns(payload):
+    #This function modifies the configuration for enabling DNS lookups as defined in the payload 
+    url = f"https://{host}/api/dns/client"
+    print("Attempting to enable DNS lookups on the following interfaces:")
+    for dnsLookupInterface in payload['dnsLookupInterfaces']:
+        print(f"\t{dnsLookupInterface}")
+    print("\n")
+    response = get_response(url, 'patch', username, password, payload)
+    print("\n")
+
+def config_dns(payload):
+    #This function modifies an existing DNS server group defined in payload
+    url = f"https://{host}/api/dns/client/servergroups/{payload['objectId']}"
+    print(f"Attempting to configure DNS server group {payload['attributes']['name']} as follows:")
+    for dnsServer in payload['attributes']['dnsServers']:
+        print(f"\tDNS Server: {dnsServer['ipAddress']}")
+        print(f"\tOutbound Interface: {dnsServer['interface']}")
+    print(f"\tDomain: {payload['attributes']['domainName']}")
+    print("\n")
+    payload = payload['attributes'] 
+    response = get_response(url, 'patch', username, password, payload)
+    print("\n")
+
+def config_ntp(payload):
+    #This function configures new NTP servers as defined in payload
+    url = f"https://{host}/api/devicesetup/ntp/servers"
+    print(f"Attempting to configure NTP server {payload['ipAddress']}")
+    response = get_response(url, 'post', username, password, payload)
+    print("\n")
+
 def config_interface(payload):
-    #This function configures an existing interface defined in payload
-    url = f"https://{host}/api/interfaces/physical/{payload['objectid']}"
-    print(f"Attempting to configure interface {payload['intname']} as follows:")
+    #This function modifies an existing interface defined in payload
+    url = f"https://{host}/api/interfaces/physical/{payload['objectId']}"
+    print(f"Attempting to configure interface {payload['hardwareID']} as follows:")
     print(f"\tDescription: {payload['attributes']['interfaceDesc']}")
     print(f"\tname: {payload['attributes']['name']}")
     print(f"\tSecurity Level: {payload['attributes']['securityLevel']}")
@@ -86,26 +117,27 @@ def config_interface(payload):
     print("\n")
 
 def config_keys(payload):
-    #This function configures an RSA keypair as defined in payload
+    #This function configures a new RSA keypair as defined in payload
     url = f"https://{host}/api/certificate/keypair"
     print(f"Attempting to generate RSA keypair {payload['name']}...")
     response = get_response(url, 'post', username, password, payload)
     print("\n")
 
 def config_cert(payload):
-    #This function creates a trustpoint and self-signed cert as defined in paylaod
+    #This function creates a new trustpoint and self-signed cert as defined in paylaod
     url = f"https://{host}/api/certificate/identity"
     print("Attempting to generate self signed certificate...")
     response = get_response(url, 'post', username, password, payload)
     print("\n")
 
 def config_static_route(payload):
-    #This function creates a static route as defined in paylaod
+    #This function creates a new static route as defined in paylaod
     url = f"https://{host}/api/routing/static"
     print("Attempting to configure the following static route...")
     print(f"\tRoute: {payload['network']['value']}")
     print(f"\tNext Hop: {payload['gateway']['value']}")
     print(f"\tOutgoing Interface: {payload['interface']['name']}")
+    print(f"\tAdministrative Distance: {payload['distanceMetric']}")
     print("\n")
     response = get_response(url, 'post', username, password, payload)
     print("\n")
