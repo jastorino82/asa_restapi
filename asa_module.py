@@ -1,4 +1,4 @@
-# This module contains various functions for interacting with the ASA RESTCONF API
+# This module contains various functions for interacting with the ASA REST API
 import requests
 import json
 from urllib3.exceptions import InsecureRequestWarning
