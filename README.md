@@ -1,4 +1,4 @@
-Interact with Cisco ASA via ASA REST API
+Interact with a Cisco ASA via ASA REST API
 
 This project provides code to programatically configure certain aspects of a Cisco ASA firewall using Python and the ASA REST API. This code was written and tested with Python 3.8, and ASA 9.14(1) with version 7.14.1 of the ASA REST API Plugin.
 
