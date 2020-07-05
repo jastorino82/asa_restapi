@@ -98,7 +98,7 @@
                 "interface": "outside"
               }
             ],
-	    "domainName": "dcloud.cisco.com"
+	    "domainName": "mydomain.com"
           }
 	}
       ]
@@ -127,17 +127,17 @@
           "subjectDN": {
             "c": ["US"],
             "cn": [
-              "asa.dcloud.cisco.com"
+              "asa.mydomain.com"
             ],
-            "ea": ["support@dcloud.cisco.com"],
-            "l": ["San Jose"],
-            "o": ["Cisco Systems"],
-            "st": ["CA"],
-            "ou": ["dCloud"]
+            "ea": ["support@mydomain.com"],
+            "l": ["Rockford"],
+            "o": ["Astorino Networks"],
+            "st": ["MI"],
+            "ou": ["Lab"]
           },
           "ipAddress": "198.18.5.254",
-          "fqdn": "asa.dcloud.cisco.com",
-          "email": "support@dcloud.cisco.com"
+          "fqdn": "asa.mydomain.com",
+          "email": "support@mydomain.com"
         },
         "kind": "object#IdentityCertificate",
         "name": "my_trustpoint",
