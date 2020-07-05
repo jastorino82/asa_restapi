@@ -1,6 +1,6 @@
-Interact with Cisco ASA via RESTCONF API
+Interact with Cisco ASA via ASA REST API
 
-This project provides code to programatically configure certain aspects of a Cisco ASA firewall using Python and the ASA RESTCONF API. This code was written and tested with Python 3.8, and ASA 9.14(1) with version 7.14.1 of the ASA REST API Plugin.
+This project provides code to programatically configure certain aspects of a Cisco ASA firewall using Python and the ASA REST API. This code was written and tested with Python 3.8, and ASA 9.14(1) with version 7.14.1 of the ASA REST API Plugin.
 
 Getting Started:
 
@@ -11,7 +11,7 @@ Getting Started:
 
 About asa_module.py:
 
-This python module contains all the functions related to interacting with ASA via RESTCONF API. The following functions exist so far:
+This python module contains all the functions related to interacting with ASA via REST API. The following functions exist so far:
    - init_params(params) - Initializes global variables used in all other API calls (like username, password, host)
    - get_response(url, method, username, password, payload='') - Generic function implementing the actual HTTP API calls using requests module
    
