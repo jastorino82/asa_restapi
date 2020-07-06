@@ -25,13 +25,12 @@ def get_response(url, method, username, password, payload=''):
             r = requests.request(method, url, json=payload, auth=(username, password), headers=headers, verify=False, timeout=60)
 
     except requests.exceptions.RequestException as e:
-        print("Request failed. Terminating!")
-        raise SystemExit(e)
+        print("Request failed!")
+        raise
 
     if r.status_code not in range(200, 205):
-        print(f"Request failed. Terminating! \t {r}")
-        print(json.dumps(json.loads(r.text), indent=4))
-        raise SystemExit()
+        print(f"Request failed! \t {r}")
+        raise ValueError(json.dumps(json.loads(r.text), indent=4))
 
     else:
         print(f"Success! \t {r}")

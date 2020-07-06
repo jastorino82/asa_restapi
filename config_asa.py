@@ -7,7 +7,12 @@ print("Reading desired ASA configuration from device.json...")
 try:
     with open('device.json') as json_file:
         device = json.load(json_file)
-except Exception as e:
+except (FileNotFoundError, OSError) as e:
+    print("\nFile not found, please make sure device.json exists")
+    raise SystemExit(e)
+
+except json.decoder.JSONDecodeError as e:
+    print("\nThere is a problem with the contents of device.json. Please double check syntax of the file")
     raise SystemExit(e)
 
 params = {}
@@ -34,12 +39,18 @@ for attribute in device['attributes']:
             for payload in attribute['payloads']:
                 #print(json.dumps(payload, indent=4))
                 cmd = "asa." + attribute['execute_function']
-                eval(cmd)
+                try:
+                    eval(cmd)
+                except Exception as e:
+                    raise SystemExit(e)
                 sleep(2)
         elif 'payload' in attribute.keys():
             #print(json.dumps(attribute['payload'], indent=4))
             cmd = "asa." + attribute['execute_function']
-            eval(cmd)
+            try:
+                eval(cmd)
+            except Exception as e:
+                raise SystemExit(e)
             sleep(2)
 
 asa.write_config()
