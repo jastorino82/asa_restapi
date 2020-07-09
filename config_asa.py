@@ -61,16 +61,20 @@ for module in device['modules']:
                 except Exception as e:
                     #raise SystemExit(e)
                     failure_dict = {}
-                    print(e)
+                    try:
+                        error_response = json.dumps(json.loads(str(e)), indent=4)
+                    except ValueError:
+                        error_response = e
+                    print(error_response)
                     print('\n')
                     failure_dict['Module'] = module['name']
                     failure_dict['Module Description'] = module['description']
                     failure_dict['Payload Description'] = payload['description']
-                    failure_dict['Error Response'] = e
+                    failure_dict['Error Response'] = error_response
                     failure_list.append(failure_dict)
-                    sleep(2)
+                    sleep(.2)
                     continue
-                sleep(2)
+                sleep(.2)
 print("Done!")
 #If there were exceptions, show the details
 if failure_list:

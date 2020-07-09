@@ -33,7 +33,7 @@ def get_response(url, method, username, password, payload=''):
 
     if r.status_code not in range(200, 205):
         print(f"Request failed! \t {r}")
-        raise ValueError(json.dumps(json.loads(r.text), indent=4))
+        raise ValueError(r.text)
 
     else:
         print(f"Success! \t {r}\n")

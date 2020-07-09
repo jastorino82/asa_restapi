@@ -278,7 +278,7 @@
         },
         {  
 	  "method": "post",
-          "description": "Verify",
+          "description": "Run CLI commands for verification",
           "payload": {
             "commands": [
               "show version",
