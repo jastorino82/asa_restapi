@@ -2,17 +2,18 @@
   "host": "198.18.133.254",
   "username": "apiuser",
   "password": "C1sco12345",
-  "attributes": [
+  "modules": [
     {
-      "name": "Interfaces",
-      "description": "ASA interfaces to configure",
+      "name": "Physical Interfaces",
+      "description": "Configure and verify physical interface configuration",
       "execute": true,
-      "execute_function": "config_interface(payload)",
+      "execute_function": "interfaces_physical(payload)",
       "payloads": [
-        {
-          "hardwareID": "GigabitEthernet0/0",
-          "objectId": "GigabitEthernet0_API_SLASH_0",
-          "attributes": {
+	{
+	  "method": "patch",
+	  "description": "Modify configuration of Gi0/0",
+	  "objectId": "GigabitEthernet0_API_SLASH_0",
+	  "payload": {
             "kind": "object#GigabitInterface",
             "interfaceDesc": "outside interface",
             "name": "outside",
@@ -31,10 +32,11 @@
             "shutdown": false 
           }
         },
-        {
-          "hardwareID": "GigabitEthernet0/1",
-          "objectId": "GigabitEthernet0_API_SLASH_1",
-          "attributes": {
+	{
+	  "method": "patch",
+	  "description": "Modify configuration of Gi0/1",
+	  "objectId": "GigabitEthernet0_API_SLASH_1",
+	  "payload": {
             "kind": "object#GigabitInterface",
             "interfaceDesc": "inside interface",
             "name": "inside",
@@ -52,134 +54,204 @@
             },
             "shutdown": false 
           }
-        }
-      ]
-    },
-    {
-      "name": "NTP",
-      "description": "NTP servers to configure",
-      "execute": true,
-      "execute_function": "config_ntp(payload)",
-      "payloads": [
-        {
-          "ipAddress": "198.18.128.1",
-	  "isPreferred": true
+        },
+	{
+	  "method": "get",
+	  "description": "Verify physical interface configuration of Gi0/0",
+	  "objectId": "GigabitEthernet0_API_SLASH_0"
 	},
-        {
-          "ipAddress": "198.18.133.1",
-	  "isPreferred": false 
+	{
+	  "method": "get",
+	  "description": "Verify physical interface configuration of Gi0/1",
+	  "objectId": "GigabitEthernet0_API_SLASH_1"
 	}
       ]
     },
     {
-      "name": "Enable DNS Lookups",
-      "description": "Enable DNS lookups",
+      "name": "NTP Servers",
+      "description": "Configure and verify NTP servers",
       "execute": true,
-      "execute_function": "enable_dns(attribute['payload'])",
-      "payload": {
-        "dnsLookupInterfaces": [
-          "outside"
-        ]
-      }
+      "execute_function": "ntp_servers(payload)",
+      "payloads": [
+	{
+	  "method": "post",
+	  "description": "Configure NTP server 198.18.128.1",
+	  "payload": {
+            "ipAddress": "198.18.128.1",
+	    "isPreferred": true
+	  } 
+	},
+	{
+	  "method": "post",
+	  "description": "Configure NTP server 198.18.133.1",
+	  "payload": {
+            "ipAddress": "198.18.133.1",
+	    "isPreferred": false 
+	  }
+	},
+	{
+	  "method": "get",
+	  "description": "Verify NTP configuration"
+	}
+      ]
+    },
+    {
+      "name": "DNS client",
+      "description": "Configure and verify DNS client",
+      "execute": true,
+      "execute_function": "dns_client(payload)",
+      "payloads": [
+        {
+	  "method": "put",
+          "description": "Modify DNS client configuration",
+          "payload": {	  
+            "dnsLookupInterfaces": [
+              "outside"
+            ]
+          }
+        },
+	{
+          "method": "get",
+	  "description": "Verify DNS client configuration"
+	}
+      ]
     },
     {
       "name": "DNS Server Groups",
-      "description": "DNS server groups to configure",
+      "description": "Configure and verify DNS server groups",
       "execute": true,
-      "execute_function": "config_dns(payload)",
+      "execute_function": "dns_client_servergroups(payload)",
       "payloads": [
-        {
-          "objectId": "DefaultDNS",
-	  "attributes": {
+	{
+	  "method": "patch",
+	  "description": "Modify the DefaultDNS server group",
+	  "objectId": "DefaultDNS",
+	  "payload": {
             "name": "DefaultDNS",
             "dnsServers": [
               {
                 "ipAddress": "198.18.128.1",
                 "interface": "outside"
               }
-            ],
-	    "domainName": "mydomain.com"
+	    ],
+	    "domainName": "dcloud.cisco.com"
           }
+	},
+	{
+	  "method": "get",
+	  "description": "Verify DNS server group configuration for DefaultDNS",
+	  "objectId": "DefaultDNS"
 	}
       ]
     },
     {
-      "name": "RSA Keypair",
-      "description": "RSA keypair to configure",
+      "name": "Certificate Keypair",
+      "description": "Configure and verify an RSA keypair",
       "execute": true,
-      "execute_function": "config_keys(attribute['payload'])",
-      "payload": {
-        "usage": "General Purpose",
-        "kind": "object#Keypair",
-        "type": "rsa",
-        "name": "mykeypair",
-        "size": 2048
-      }
+      "execute_function": "cert_keypair(payload)",
+      "payloads": [
+	{
+          "method": "post",
+	  "description": "Add a new RSA keypair mykeypair",
+	  "payload": {
+            "usage": "General Purpose",
+            "kind": "object#Keypair",
+            "type": "rsa",
+            "name": "mykeypair",
+            "size": 2048
+          }
+	},
+	{
+	  "method": "get",
+	  "description": "Verify RSA keypair mykeypair",
+	  "objectId": "mykeypair"
+	}
+      ]
     },
     {
       "name": "Identity Certificate",
-      "description": "Identity certificate parameters",
+      "description": "Configure and verify a self signed identity certificate",
       "execute": true,
-      "execute_function": "config_cert(attribute['payload'])",
-      "payload": {
-        "enrollParameters": {
-          "includeSerialNumber": false,
-          "subjectDN": {
-            "c": ["US"],
-            "cn": [
-              "asa.mydomain.com"
-            ],
-            "ea": ["support@mydomain.com"],
-            "l": ["Rockford"],
-            "o": ["Astorino Networks"],
-            "st": ["MI"],
-            "ou": ["Lab"]
-          },
-          "ipAddress": "198.18.5.254",
-          "fqdn": "asa.mydomain.com",
-          "email": "support@mydomain.com"
-        },
-        "kind": "object#IdentityCertificate",
-        "name": "my_trustpoint",
-        "enableCACheck": true,
-        "enableProxyLDCIssuer": false,
-        "keyPair": "mykeypair",
-        "selfSign": true
-      }
+      "execute_function": "cert_identity(payload)",
+      "payloads": [
+        {
+	  "method": "post",
+	  "description": "Add a new identity certificate",
+	  "payload": {
+            "kind": "object#IdentityCertificate",
+            "name": "my_trustpoint",
+            "keyPair": "mykeypair",
+            "enrollParameters": {
+              "includeSerialNumber": false,
+              "subjectDN": {
+                "c": ["US"],
+                "cn": [
+                  "asa.dcloud.cisco.com"
+                ],
+                "ea": ["support@dcloud.cisco.com"],
+                "l": ["San Jose"],
+                "o": ["Cisco Systems"],
+                "st": ["CA"],
+                "ou": ["dCloud"]
+              },
+              "ipAddress": "198.18.5.254",
+              "fqdn": "asa.dcloud.cisco.com",
+              "email": "support@dcloud.cisco.com"
+            },
+            "enableCACheck": true,
+            "enableProxyLDCIssuer": false,
+            "selfSign": true
+          }
+	},
+	{
+	  "method": "get",
+	  "description": "Verify identity certificate",
+	  "objectId": "my_trustpoint"
+	}
+      ]
     },
     {
-      "name": "Static Routes",
-      "description": "Static routes to configure",
+      "name": "Static Routing",
+      "description": "Configure and verify static routing",
       "execute": true,
-      "execute_function": "config_static_route(payload)",
+      "execute_function": "routing_static(payload)",
       "payloads": [
-        {      
-          "tunneled": false,
-          "kind": "object#IPv4Route",
-          "distanceMetric": 250,
-          "tracked": false,
-          "interface": {
-            "kind": "objectRef#Interface",
-            "name": "outside"
-          },
-          "gateway": {
-            "kind": "IPv4Address",
-            "value": "198.18.5.1"
-          },
-          "network": {
-            "kind": "AnyIPAddress",
-            "value": "any4"
-          }
-        }
+	{
+          "method": "post",
+	  "description": "Add a floating static default route",
+	  "payload": {
+            "tunneled": false,
+            "kind": "object#IPv4Route",
+            "distanceMetric": 250,
+            "tracked": false,
+            "interface": {
+              "kind": "objectRef#Interface",
+              "name": "outside"
+            },
+            "gateway": {
+              "kind": "IPv4Address",
+              "value": "198.18.5.1"
+            },
+            "network": {
+              "kind": "AnyIPAddress",
+              "value": "any4"
+            }
+          }  
+	},
+        {
+	  "method": "get",
+	  "description": "Verify static routes"
+	}
       ]
     },
     {
       "name": "CLI Commands",
       "description": "CLI commands to push",
       "execute": true,
-      "execute_function": "send_cli(payload['payload'])",
+      "execute_function": "send_cli(payload)",
       "payloads": [ 
         {  
+	  "method": "post",
           "description": "Configure SSL VPN",
           "payload": {
             "commands": [
@@ -201,10 +273,21 @@
 	      "enable outside",
 	      "anyconnect image disk0:/anyconnect-win-4.8.03052-webdeploy-k9.pkg",
 	      "anyconnect enable"
+	    ]
+          }
+        },
+        {  
+	  "method": "post",
+          "description": "Verify",
+          "payload": {
+            "commands": [
+              "show version",
+	      "show nameif",
+	      "show interface ip brief"
             ]
           }
-        }
-      ]
+	}
+      ]  
     }
   ]
 }

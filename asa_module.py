@@ -9,7 +9,9 @@ def init_params(params):
     global host
     global username
     global password
+    global base_url
     host = params['host']
+    base_url = 'https://' + host
     username = params['username']
     password = params['password']
     
@@ -20,9 +22,10 @@ def get_response(url, method, username, password, payload=''):
 
     try:
         if payload == '':
-            r = requests.request(method, url, auth=(username, password), headers=headers, verify=False, timeout=10)
+            r = requests.request(method, url, auth=(username, password), headers=headers, verify=False, timeout=120)
         else:
-            r = requests.request(method, url, json=payload, auth=(username, password), headers=headers, verify=False, timeout=60)
+            print(f"Sending payload:\n\n{json.dumps(payload, indent=4)}\n")
+            r = requests.request(method, url, json=payload, auth=(username, password), headers=headers, verify=False, timeout=120)
 
     except requests.exceptions.RequestException as e:
         print("Request failed!")
@@ -33,129 +36,218 @@ def get_response(url, method, username, password, payload=''):
         raise ValueError(json.dumps(json.loads(r.text), indent=4))
 
     else:
-        print(f"Success! \t {r}")
+        print(f"Success! \t {r}\n")
 
     return r
 
-def get_interfaces():
-    #This function fetches information about an interface, and displays some key information about it
-    url = f'https://{host}/api/interfaces/physical'
+def dns_client(payload):
+    #This function is for querying and configuring the DNS client 
+    method = payload['method'] 
+    print(f"Method: {method.upper()}")
+
+    if 'description' in payload.keys():
+        description = payload['description']
+        print(f"Description: {description}")
+
+    if 'payload' in payload.keys():
+        payload = payload['payload']
+
+    else:
+        payload = ''
+
+    url = f"{base_url}/api/dns/client"
+    print(f"URL: {url}\n")
+
+    return get_response(url, method, username, password, payload)
+
+def dns_client_servergroups(payload):
+    #This function is for querying and configuring DNS server groups
+    method = payload['method'] 
+    print(f"Method: {method.upper()}")
+
+    if 'objectId' in payload.keys():
+        objectId = payload['objectId']
+        print(f"objectId: {objectId}")
+
+    if 'description' in payload.keys():
+        description = payload['description']
+        print(f"Description: {description}")
+
+    if 'payload' in payload.keys():
+        payload = payload['payload']
+
+    else:
+        payload = ''
+
+    if (method in ('put','patch','delete')) or (method == 'get' and 'objectId' in locals()):
+        url = f"{base_url}/api/dns/client/servergroups/{objectId}"
+
+    elif (method == 'post') or (method == 'get' and not 'objectId' in locals()): 
+        url = f"{base_url}/api/dns/client/servergroups"
     
-    print(f"Fetching interface information...\n")
-    response = get_response(url, 'get', username, password)
-    print("\n")
-    interfaces = response.json()
+    print(f"URL: {url}\n")
+    return get_response(url, method, username, password, payload)
 
-    for interface in interfaces['items']:
-        print(f"Interface: {interface['hardwareID']}")
-        print(f"Interface Name: {interface['name']}")
-        print(f"Description: {interface['interfaceDesc']}")
-        if interface['securityLevel'] == -1:
-            print(f"Security Level: Not Set")
-        else:
-            print(f"Security Level: {interface['securityLevel']}")
-        print(f"Speed: {interface['speed']}")
-        print(f"Duplex: {interface['duplex']}")
-        if type(interface['ipAddress']) == dict and interface['ipAddress']['kind'] == 'DHCP':
-            url = f"https://{host}/api/monitoring/ipaddress/{interface['name']}"
-            response = get_response(url, 'get', username, password)
-            ip = response.json()['ipAddress']
-            netmask = response.json()['netmask']
-            print(f"IPv4 Address: {ip}")
-            print(f"Netmask: {netmask}")
+def ntp_servers(payload):
+    #This function is for querying and configuring NTP servers
+    method = payload['method'] 
+    print(f"Method: {method.upper()}")
 
-        elif type(interface['ipAddress']) == dict and 'ip' in interface['ipAddress'].keys():
-            print(f"IPv4 Address: {interface['ipAddress']['ip']['value']}")
-            print(f"Netmask: {interface['ipAddress']['netMask']['value']}")
-        print(f"Shutdown Status: {interface['shutdown']}")
-        print("\n")
+    if 'objectId' in payload.keys():
+        objectId = payload['objectId']
+        print(f"objectId: {objectId}")
 
-def enable_dns(payload):
-    #This function modifies the configuration for enabling DNS lookups as defined in the payload 
-    url = f"https://{host}/api/dns/client"
-    print("Attempting to enable DNS lookups on the following interfaces:")
-    for dnsLookupInterface in payload['dnsLookupInterfaces']:
-        print(f"\t{dnsLookupInterface}")
-    print("\n")
-    response = get_response(url, 'patch', username, password, payload)
-    print("\n")
+    if 'description' in payload.keys():
+        description = payload['description']
+        print(f"Description: {description}")
 
-def config_dns(payload):
-    #This function modifies an existing DNS server group defined in payload
-    url = f"https://{host}/api/dns/client/servergroups/{payload['objectId']}"
-    print(f"Attempting to configure DNS server group {payload['attributes']['name']} as follows:")
-    for dnsServer in payload['attributes']['dnsServers']:
-        print(f"\tDNS Server: {dnsServer['ipAddress']}")
-        print(f"\tOutbound Interface: {dnsServer['interface']}")
-    print(f"\tDomain: {payload['attributes']['domainName']}")
-    print("\n")
-    payload = payload['attributes'] 
-    response = get_response(url, 'patch', username, password, payload)
-    print("\n")
+    if 'payload' in payload.keys():
+        payload = payload['payload']
 
-def config_ntp(payload):
-    #This function configures new NTP servers as defined in payload
-    url = f"https://{host}/api/devicesetup/ntp/servers"
-    print(f"Attempting to configure NTP server {payload['ipAddress']}")
-    response = get_response(url, 'post', username, password, payload)
-    print("\n")
+    else:
+        payload = ''
 
-def config_interface(payload):
-    #This function modifies an existing interface defined in payload
-    url = f"https://{host}/api/interfaces/physical/{payload['objectId']}"
-    print(f"Attempting to configure interface {payload['hardwareID']} as follows:")
-    print(f"\tDescription: {payload['attributes']['interfaceDesc']}")
-    print(f"\tname: {payload['attributes']['name']}")
-    print(f"\tSecurity Level: {payload['attributes']['securityLevel']}")
-    print(f"\tIPv4 Address: {payload['attributes']['ipAddress']['ip']['value']}")
-    print(f"\tNetmask: {payload['attributes']['ipAddress']['netMask']['value']}")
-    print(f"\tShutdown Status: {payload['attributes']['shutdown']}")
-    print("\n")
-    payload = payload['attributes'] 
-    response = get_response(url, 'patch', username, password, payload)
-    print("\n")
+    if (method in ('put','patch','delete')) or (method == 'get' and 'objectId' in locals()):
+        url = f"{base_url}/api/devicesetup/ntp/servers/{objectId}"
 
-def config_keys(payload):
-    #This function configures a new RSA keypair as defined in payload
-    url = f"https://{host}/api/certificate/keypair"
-    print(f"Attempting to generate RSA keypair {payload['name']}...")
-    response = get_response(url, 'post', username, password, payload)
-    print("\n")
+    elif (method == 'post') or (method == 'get' and not 'objectId' in locals()): 
+        url = f"{base_url}/api/devicesetup/ntp/servers"
+    
+    print(f"URL: {url}\n")
+    return get_response(url, method, username, password, payload)
 
-def config_cert(payload):
-    #This function creates a new trustpoint and self-signed cert as defined in paylaod
-    url = f"https://{host}/api/certificate/identity"
-    print("Attempting to generate self signed certificate...")
-    response = get_response(url, 'post', username, password, payload)
-    print("\n")
+def interfaces_physical(payload):
+    #This function is for querying and configuring physical interfaces
+    method = payload['method'] 
+    print(f"Method: {method.upper()}")
 
-def config_static_route(payload):
-    #This function creates a new static route as defined in paylaod
-    url = f"https://{host}/api/routing/static"
-    print("Attempting to configure the following static route...")
-    print(f"\tRoute: {payload['network']['value']}")
-    print(f"\tNext Hop: {payload['gateway']['value']}")
-    print(f"\tOutgoing Interface: {payload['interface']['name']}")
-    print(f"\tAdministrative Distance: {payload['distanceMetric']}")
-    print("\n")
-    response = get_response(url, 'post', username, password, payload)
-    print("\n")
+    if 'objectId' in payload.keys():
+        objectId = payload['objectId']
+        print(f"objectId: {objectId}")
+
+    if 'description' in payload.keys():
+        description = payload['description']
+        print(f"Description: {description}")
+
+    if 'payload' in payload.keys():
+        payload = payload['payload']
+
+    else:
+        payload = ''
+
+    if (method in ('put','patch')) or (method == 'get' and 'objectId' in locals()):
+        url = f"{base_url}/api/interfaces/physical/{objectId}" 
+
+    elif method == 'get' and not 'objectId' in locals(): 
+        url = f"{base_url}/api/interfaces/physical"
+
+    print(f"URL: {url}\n")
+    return get_response(url, method, username, password, payload)
+
+def cert_keypair(payload):
+    #This function is for querying and configuring RSA keypair
+    method = payload['method'] 
+    print(f"Method: {method.upper()}")
+
+    if 'objectId' in payload.keys():
+        objectId = payload['objectId']
+        print(f"objectId: {objectId}")
+
+    if 'description' in payload.keys():
+        description = payload['description']
+        print(f"Description: {description}")
+
+    if 'payload' in payload.keys():
+        payload = payload['payload']
+
+    else:
+        payload = ''
+
+    if method in ('get','delete') and 'objectId' in locals():
+        url = f"{base_url}/api/certificate/keypair/{objectId}"
+
+    elif method in ('get','post') and not 'objectId' in locals(): 
+        url = f"{base_url}/api/certificate/keypair"
+
+    print(f"URL: {url}\n")
+    return get_response(url, method, username, password, payload)
+
+def cert_identity(payload):
+    #This function is used for querying and configuring a self-signed certificate  
+    method = payload['method'] 
+    print(f"Method: {method.upper()}")
+
+    if 'objectId' in payload.keys():
+        objectId = payload['objectId']
+        print(f"objectId: {objectId}")
+
+    if 'description' in payload.keys():
+        description = payload['description']
+        print(f"Description: {description}")
+
+    if 'payload' in payload.keys():
+        payload = payload['payload']
+
+    else:
+        payload = ''
+
+    if method in ('get','delete') and 'objectId' in locals():
+        url = f"{base_url}/api/certificate/identity/{objectId}"
+
+    elif method in ('get','post') and not 'objectId' in locals(): 
+        url = f"{base_url}/api/certificate/identity"
+
+    print(f"URL: {url}\n")
+    return get_response(url, method, username, password, payload)
+
+def routing_static(payload):
+    #This function is used for querying and configuring static routes
+    method = payload['method'] 
+    print(f"Method: {method.upper()}")
+
+    if 'objectId' in payload.keys():
+        objectId = payload['objectId']
+        print(f"objectId: {objectId}")
+
+    if 'description' in payload.keys():
+        description = payload['description']
+        print(f"Description: {description}")
+
+    if 'payload' in payload.keys():
+        payload = payload['payload']
+
+    else:
+        payload = ''
+
+    if (method in ('put','patch','delete')) or (method == 'get' and 'objectId' in locals()):
+        url = f"{base_url}/api/routing/static/{objectId}"
+
+    elif (method == 'post') or (method == 'get' and not 'objectId' in locals()): 
+        url = f"{base_url}/api/routing/static"
+    
+    print(f"URL: {url}\n")
+    return get_response(url, method, username, password, payload)
 
 def send_cli(payload):
-    #This function sends CLI commands as defined in payload, and displays the output of each command
-    url = f"https://{host}/api/cli"
-    print("Sending the following commands to ASA:")
-    for command in payload['commands']:
-        print(f"\t{command}")
-    response = get_response(url, 'post', username, password, payload)
-    print("\n") 
-    for cmdoutput in json.loads(response.text)['response']:
-        print(cmdoutput)
-    print("\n")
+    #This function sends CLI commands as defined in payload
+    method = payload['method']
+    print(f"Method: {method.upper()}")
+
+    if 'description' in payload.keys():
+        description = payload['description']
+        print(f"Description: {description}")
+
+    if 'payload' in payload.keys():
+        payload = payload['payload']
+
+    url = f"{base_url}/api/cli"
+
+    print(f"URL: {url}\n")
+    return get_response(url, method, username, password, payload)
 
 def write_config():
     #This function performs a 'wr mem' on the ASA to save configuration
-    url = f"https://{host}/api/commands/writemem"
+    url = f"{base_url}/api/commands/writemem"
     print("Saving configuration...")
     response = get_response(url, 'post', username, password)
     print("\n")
